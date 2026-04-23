@@ -24,6 +24,7 @@ export const assignCharacter = mutation({
 
     const toUser = await ctx.db.get(args.toUserId);
     if (!toUser) throw new Error("Gracz nie istnieje");
+    if (toUser.assignedCharacter !== undefined) throw new Error("Ta osoba ma już przypisaną postać");
 
     await ctx.db.patch(args.toUserId, { assignedCharacter: character });
 

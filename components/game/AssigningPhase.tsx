@@ -35,7 +35,7 @@ export default function AssigningPhase({ room, userId }: Props) {
   const myIndex = sortedPlayers.findIndex((p) => p._id === userId);
   const targetPlayer = sortedPlayers[(myIndex + 1) % sortedPlayers.length];
 
-  const alreadyAssigned = me.assignedCharacter !== undefined;
+  const alreadyAssigned = targetPlayer.assignedCharacter !== undefined || submitted;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
