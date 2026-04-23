@@ -84,6 +84,7 @@ export const submitVote = mutation({
           timestamp: Date.now(),
         });
         await ctx.db.patch(args.roomId, { activeMessageId: undefined });
+        await ctx.runMutation(internal.rooms.advanceTurn, { roomId: args.roomId });
       } else if (noCount >= majority || allVotes.length >= totalVoters) {
         await ctx.db.insert("messages", {
           roomId: args.roomId,
@@ -94,6 +95,7 @@ export const submitVote = mutation({
           timestamp: Date.now(),
         });
         await ctx.db.patch(args.roomId, { activeMessageId: undefined });
+        await ctx.runMutation(internal.rooms.advanceTurn, { roomId: args.roomId });
       }
     }
   },

@@ -80,6 +80,11 @@ export default function PlayingPhase({ room, userId }: Props) {
                 {player.name}
                 {isMe && " (ty)"}
               </span>
+              {!isMe && player.assignedCharacter && (
+                <span className="text-xs text-fuchsia-200/60 whitespace-nowrap max-w-[72px] truncate">
+                  {player.assignedCharacter}
+                </span>
+              )}
             </div>
           );
         })}
