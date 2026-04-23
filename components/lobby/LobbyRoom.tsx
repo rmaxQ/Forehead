@@ -54,7 +54,7 @@ export default function LobbyRoom({ room, userId }: Props) {
 
       <div className="relative z-10 w-full max-w-md space-y-4">
         <div className="text-center">
-          <h1 className="text-3xl font-black text-fuchsia-400">Czułko 🎭</h1>
+          <h1 className="text-3xl font-black text-fuchsia-400">Czółko 🎭</h1>
           <p className="text-white/40 text-sm mt-1">Lobby</p>
         </div>
 

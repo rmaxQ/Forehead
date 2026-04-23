@@ -71,7 +71,7 @@ export default function HomePage() {
       <div className="relative z-10 w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
           <h1 className="text-6xl font-black tracking-tight">
-            <span className="text-fuchsia-400">Czułko</span>
+            <span className="text-fuchsia-400">Czółko</span>
             <span className="ml-2">🎭</span>
           </h1>
           <p className="text-white/50 text-sm">

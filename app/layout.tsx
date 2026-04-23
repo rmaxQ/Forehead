@@ -10,7 +10,7 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Czułko 🎭",
+  title: "Czółko 🎭",
   description: "Gra towarzyska — zgadnij swoją postać!",
 };
 

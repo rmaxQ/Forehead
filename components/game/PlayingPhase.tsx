@@ -34,7 +34,7 @@ export default function PlayingPhase({ room, userId }: Props) {
     <main className="min-h-screen flex flex-col max-w-lg mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-white/10">
-        <h1 className="text-xl font-black text-fuchsia-400">Czułko 🎭</h1>
+        <h1 className="text-xl font-black text-fuchsia-400">Czółko 🎭</h1>
         <span className="text-white/40 text-sm font-mono tracking-widest">{room.code}</span>
       </div>
 

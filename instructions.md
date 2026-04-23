@@ -1,8 +1,8 @@
-# 🎭 Czułko — Specyfikacja Aplikacji
+# 🎭 Czółko — Specyfikacja Aplikacji
 
 ## Przegląd
 
-**Czułko** to przeglądarkowa gra towarzyska dla grup znajomych, inspirowana klasyczną grą "Kim jestem?". Gracze odgadują przypisane im postacie/rzeczy, zadając pytania, na które reszta odpowiada. Aplikacja działa w czasie rzeczywistym dzięki **Convex**, z interfejsem w **Next.js**.
+**Czółko** to przeglądarkowa gra towarzyska dla grup znajomych, inspirowana klasyczną grą "Kim jestem?". Gracze odgadują przypisane im postacie/rzeczy, zadając pytania, na które reszta odpowiada. Aplikacja działa w czasie rzeczywistym dzięki **Convex**, z interfejsem w **Next.js**.
 
 ---
 
@@ -67,7 +67,7 @@ votes: {
 
 ### 1. Strona Główna `/`
 
-- Duży nagłówek z nazwą **Czułko 🎭**
+- Duży nagłówek z nazwą **Czółko 🎭**
 - Przycisk **„Stwórz pokój"** → formularz: podaj nick → tworzy pokój i przechodzi do lobby
 - Pole **„Dołącz do pokoju"** → wpisz kod + nick → dołącza do istniejącego pokoju
 - Przyjazny, kolorowy design — duże przyciski, czytelne fonty
@@ -107,7 +107,7 @@ votes: {
 
 ```
 ┌─────────────────────────────────────────┐
-│  CZUŁKO 🎭          Pokój: KOTKI        │
+│  Czółko 🎭          Pokój: KOTKI        │
 ├─────────────────────────────────────────┤
 │  👤 Gracze:                             │
 │  ✅ Ania (już zgadła!)                  │
@@ -269,4 +269,4 @@ NEXT_PUBLIC_CONVEX_URL=https://xxx.convex.cloud
 
 ---
 
-*Specyfikacja przygotowana dla Claude Code — użyj tego dokumentu jako głównego pliku referencyjnego przy budowie aplikacji Czułko.*
+*Specyfikacja przygotowana dla Claude Code — użyj tego dokumentu jako głównego pliku referencyjnego przy budowie aplikacji Czółko.*
