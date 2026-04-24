@@ -127,7 +127,7 @@ export default function AssigningPhase({ room, userId }: Props) {
         )}
 
         {/* Players status */}
-        <div className="space-y-2">
+        <div className="space-y-2 max-h-48 overflow-y-auto">
           {sortedPlayers.map((p) => (
             <div
               key={p._id}

@@ -36,7 +36,7 @@ export default function PlayingPhase({ room, userId }: Props) {
   const me = players.find((p) => p._id === userId);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="h-screen flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 shrink-0">
         <div className="flex items-center gap-2">

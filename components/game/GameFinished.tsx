@@ -65,7 +65,7 @@ export default function GameFinished({ room, userId }: Props) {
         </div>
 
         {/* Rankings */}
-        <div className="space-y-3">
+        <div className="space-y-3 max-h-[55vh] overflow-y-auto">
           {sorted.map((player, index) => (
             <Card
               key={player._id}

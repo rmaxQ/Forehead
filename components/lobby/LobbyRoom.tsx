@@ -81,7 +81,7 @@ export default function LobbyRoom({ room, userId }: Props) {
               Gracze ({players?.length ?? 0})
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-0">
+          <CardContent className="pt-0 max-h-64 overflow-y-auto">
             {players ? (
               <PlayerList
                 players={players}
