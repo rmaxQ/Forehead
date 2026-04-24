@@ -44,7 +44,7 @@ export default function TurnActions({ roomId, userId, hasActiveVote }: Props) {
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-4 space-y-3">
-      <p className="text-center text-fuchsia-400 font-semibold text-sm animate-pulse-glow">
+      <p className="text-center text-cyan-400 font-semibold text-sm animate-pulse-glow">
         🎯 Twoja tura!
       </p>
 
@@ -54,7 +54,7 @@ export default function TurnActions({ roomId, userId, hasActiveVote }: Props) {
           onClick={() => setMode("question")}
           className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
             mode === "question"
-              ? "bg-fuchsia-500 text-white"
+              ? "bg-cyan-500 text-black"
               : "text-white/50 hover:text-white"
           }`}
         >

@@ -46,7 +46,7 @@ export default defineSchema({
     roomId: v.id("rooms"),
     messageId: v.id("messages"),
     voterId: v.id("users"),
-    vote: v.union(v.literal("yes"), v.literal("no")),
+    vote: v.union(v.literal("yes"), v.literal("no"), v.literal("depends")),
   })
     .index("by_messageId", ["messageId"])
     .index("by_roomId_and_messageId", ["roomId", "messageId"]),

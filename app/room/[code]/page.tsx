@@ -33,7 +33,7 @@ export default function RoomPage() {
           <p className="text-2xl">😕 Pokój nie istnieje</p>
           <button
             onClick={() => router.push("/")}
-            className="text-fuchsia-400 underline"
+            className="text-cyan-400 underline"
           >
             Wróć do strony głównej
           </button>

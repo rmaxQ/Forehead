@@ -6,7 +6,7 @@ export const submitVote = mutation({
   args: {
     voterId: v.id("users"),
     roomId: v.id("rooms"),
-    vote: v.union(v.literal("yes"), v.literal("no")),
+    vote: v.union(v.literal("yes"), v.literal("no"), v.literal("depends")),
   },
   handler: async (ctx, args) => {
     const room = await ctx.db.get(args.roomId);
@@ -37,9 +37,8 @@ export const submitVote = mutation({
       .withIndex("by_roomId", (q) => q.eq("roomId", args.roomId))
       .collect();
 
-    const voters = allPlayers.filter(
-      (p) => p._id !== room.currentTurnUserId && !p.hasGuessed
-    );
+    // Wszyscy gracze poza aktywnym mogą głosować (w tym ci, którzy już zgadli)
+    const voters = allPlayers.filter((p) => p._id !== room.currentTurnUserId);
     const totalVoters = voters.length;
 
     const allVotes = await ctx.db
@@ -49,6 +48,7 @@ export const submitVote = mutation({
 
     const yesCount = allVotes.filter((v) => v.vote === "yes").length;
     const noCount = allVotes.filter((v) => v.vote === "no").length;
+    const dependsCount = allVotes.filter((v) => v.vote === "depends").length;
     const majority = Math.floor(totalVoters / 2) + 1;
 
     const message = await ctx.db.get(messageId);
@@ -85,12 +85,32 @@ export const submitVote = mutation({
         });
         await ctx.db.patch(args.roomId, { activeMessageId: undefined });
         await ctx.runMutation(internal.rooms.advanceTurn, { roomId: args.roomId });
-      } else if (noCount >= majority || allVotes.length >= totalVoters) {
+      } else if (noCount >= majority) {
         await ctx.db.insert("messages", {
           roomId: args.roomId,
           authorId: room.currentTurnUserId!,
           authorName: "System",
           content: `❌ NIE`,
+          type: "answer",
+          timestamp: Date.now(),
+        });
+        await ctx.db.patch(args.roomId, { activeMessageId: undefined });
+        await ctx.runMutation(internal.rooms.advanceTurn, { roomId: args.roomId });
+      } else if (allVotes.length >= totalVoters) {
+        // Wszyscy zagłosowali, brak większości — wygrywa najliczniejsza opcja
+        let answer: string;
+        if (dependsCount > yesCount && dependsCount > noCount) {
+          answer = `🤷 ZALEŻY`;
+        } else if (yesCount > noCount) {
+          answer = `✅ TAK`;
+        } else {
+          answer = `❌ NIE`;
+        }
+        await ctx.db.insert("messages", {
+          roomId: args.roomId,
+          authorId: room.currentTurnUserId!,
+          authorName: "System",
+          content: answer,
           type: "answer",
           timestamp: Date.now(),
         });

@@ -64,14 +64,14 @@ export default function HomePage() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-fuchsia-600/10 blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-violet-600/10 blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-cyan-600/10 blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-blue-600/10 blur-3xl" />
       </div>
 
       <div className="relative z-10 w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
           <h1 className="text-6xl font-black tracking-tight">
-            <span className="text-fuchsia-400">Czółko</span>
+            <span className="text-cyan-400">Czółko</span>
             <span className="ml-2">🎭</span>
           </h1>
           <p className="text-white/50 text-sm">
@@ -82,7 +82,7 @@ export default function HomePage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <span className="text-fuchsia-400">✦</span> Stwórz pokój
+              <span className="text-cyan-400">✦</span> Stwórz pokój
             </CardTitle>
           </CardHeader>
           <CardContent>

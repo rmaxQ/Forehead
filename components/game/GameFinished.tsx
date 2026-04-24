@@ -54,7 +54,7 @@ export default function GameFinished({ room, userId }: Props) {
     <main className="min-h-screen flex flex-col items-center justify-center p-4">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-amber-900/20 to-transparent" />
-        <div className="absolute bottom-0 left-0 w-full h-64 bg-gradient-to-t from-fuchsia-900/20 to-transparent" />
+        <div className="absolute bottom-0 left-0 w-full h-64 bg-gradient-to-t from-cyan-900/20 to-transparent" />
       </div>
 
       <div className="relative z-10 w-full max-w-md space-y-5">

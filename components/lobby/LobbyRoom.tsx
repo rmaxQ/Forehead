@@ -49,12 +49,12 @@ export default function LobbyRoom({ room, userId }: Props) {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-4 relative">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-fuchsia-600/10 blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-cyan-600/10 blur-3xl" />
       </div>
 
       <div className="relative z-10 w-full max-w-md space-y-4">
         <div className="text-center">
-          <h1 className="text-3xl font-black text-fuchsia-400">Czółko 🎭</h1>
+          <h1 className="text-3xl font-black text-cyan-400">Czółko 🎭</h1>
           <p className="text-white/40 text-sm mt-1">Lobby</p>
         </div>
 

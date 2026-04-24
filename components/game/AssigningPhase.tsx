@@ -56,12 +56,12 @@ export default function AssigningPhase({ room, userId }: Props) {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-4">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-fuchsia-900/20 to-transparent" />
+        <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-cyan-900/20 to-transparent" />
       </div>
 
       <div className="relative z-10 w-full max-w-md space-y-4">
         <div className="text-center">
-          <h1 className="text-3xl font-black text-fuchsia-400">Czółko 🎭</h1>
+          <h1 className="text-3xl font-black text-cyan-400">Czółko 🎭</h1>
           <p className="text-white/40 text-sm mt-1">Przypisywanie postaci</p>
         </div>
 
@@ -70,7 +70,7 @@ export default function AssigningPhase({ room, userId }: Props) {
           <CardContent className="pt-6 space-y-3">
             <div className="flex justify-between text-sm">
               <span className="text-white/60">Postęp</span>
-              <span className="text-fuchsia-400 font-bold">
+              <span className="text-cyan-400 font-bold">
                 {assignedCount}/{players.length}
               </span>
             </div>
@@ -89,7 +89,7 @@ export default function AssigningPhase({ room, userId }: Props) {
             <CardHeader>
               <CardTitle>
                 Przypisz postać dla:{" "}
-                <span className="text-fuchsia-400">{targetPlayer.name}</span>
+                <span className="text-cyan-400">{targetPlayer.name}</span>
               </CardTitle>
             </CardHeader>
             <CardContent>

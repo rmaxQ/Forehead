@@ -14,7 +14,7 @@ export default function PlayerList({ players, hostId, currentUserId }: Props) {
           key={player._id}
           className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/10"
         >
-          <div className="w-8 h-8 rounded-full bg-fuchsia-500/20 border border-fuchsia-500/30 flex items-center justify-center text-sm font-bold text-fuchsia-300">
+          <div className="w-8 h-8 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-sm font-bold text-cyan-300">
             {player.name[0].toUpperCase()}
           </div>
           <span className="flex-1 text-white font-medium">

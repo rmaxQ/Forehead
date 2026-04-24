@@ -21,14 +21,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pl" className={`${geist.variable} h-full`}>
-      <body className="min-h-full bg-[#0f172a] text-white antialiased">
+      <body className="min-h-full bg-[#030d1a] text-white antialiased">
         <Providers>
           {children}
           <Toaster
             position="top-center"
             toastOptions={{
               style: {
-                background: "#1e293b",
+                background: "#061220",
                 border: "1px solid rgba(255,255,255,0.1)",
                 color: "white",
               },
