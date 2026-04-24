@@ -19,7 +19,8 @@ export default function GameFinished({ room, userId }: Props) {
   const [cleaning, setCleaning] = useState(false);
 
   const players = useQuery(api.users.getPlayersWithCharacters, { roomId: room._id });
-  const cleanupRoom = useMutation(api.rooms.cleanupFinishedRoom);
+  const resetToLobby = useMutation(api.rooms.resetToLobby);
+  const leaveRoom = useMutation(api.rooms.leaveRoom);
 
   if (!players) {
     return (
@@ -35,19 +36,25 @@ export default function GameFinished({ room, userId }: Props) {
     return a.order - b.order;
   });
 
+  async function handlePlayAgain() {
+    setCleaning(true);
+    try {
+      await resetToLobby({ roomId: room._id });
+      // Room status change triggers reactive re-render to LobbyRoom automatically
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Błąd");
+      setCleaning(false);
+    }
+  }
+
   async function handleExit() {
     setCleaning(true);
     try {
-      await cleanupRoom({ roomId: room._id });
+      await leaveRoom({ userId, roomId: room._id });
     } catch {
-      // Room might already be cleaned up
+      // ignore
     }
     router.push("/");
-  }
-
-  async function handlePlayAgain() {
-    toast.info("Wróć do strony głównej i stwórz nowy pokój!");
-    await handleExit();
   }
 
   return (

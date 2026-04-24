@@ -236,6 +236,49 @@ export const cleanupFinishedRoom = mutation({
   },
 });
 
+export const resetToLobby = mutation({
+  args: { roomId: v.id("rooms") },
+  handler: async (ctx, args) => {
+    const room = await ctx.db.get(args.roomId);
+    if (!room || room.status !== "finished") return;
+
+    // Delete all messages and their votes
+    const messages = await ctx.db
+      .query("messages")
+      .withIndex("by_roomId", (q) => q.eq("roomId", args.roomId))
+      .collect();
+    for (const msg of messages) {
+      const votes = await ctx.db
+        .query("votes")
+        .withIndex("by_messageId", (q) => q.eq("messageId", msg._id))
+        .collect();
+      for (const vote of votes) await ctx.db.delete(vote._id);
+      await ctx.db.delete(msg._id);
+    }
+
+    // Reset players and re-shuffle order
+    const players = await ctx.db
+      .query("users")
+      .withIndex("by_roomId", (q) => q.eq("roomId", args.roomId))
+      .collect();
+    const shuffled = [...players].sort(() => Math.random() - 0.5);
+    for (let i = 0; i < shuffled.length; i++) {
+      await ctx.db.patch(shuffled[i]._id, {
+        assignedCharacter: undefined,
+        hasGuessed: false,
+        order: i,
+      });
+    }
+
+    await ctx.db.patch(args.roomId, {
+      status: "lobby",
+      currentTurnUserId: undefined,
+      activeMessageId: undefined,
+      lastActivityAt: Date.now(),
+    });
+  },
+});
+
 export const cleanupInactiveRooms = internalMutation({
   args: {},
   handler: async (ctx) => {
