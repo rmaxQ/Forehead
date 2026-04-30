@@ -24,7 +24,7 @@ export default function LobbyRoom({ room, userId }: Props) {
   const leaveRoom = useMutation(api.rooms.leaveRoom);
 
   const isHost = room.hostId === userId;
-  const canStart = (players?.length ?? 0) >= 3;
+  const canStart = (players?.length ?? 0) >= 2;
 
   async function handleStart() {
     setStarting(true);
@@ -107,7 +107,7 @@ export default function LobbyRoom({ room, userId }: Props) {
             </Button>
             {!canStart && (
               <p className="text-center text-white/40 text-xs">
-                Potrzeba co najmniej 3 graczy ({(players?.length ?? 0)}/3)
+                Potrzeba co najmniej 2 graczy ({(players?.length ?? 0)}/2)
               </p>
             )}
           </div>

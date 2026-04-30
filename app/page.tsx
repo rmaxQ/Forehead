@@ -149,7 +149,7 @@ export default function HomePage() {
         </Card>
 
         <p className="text-center text-white/30 text-xs">
-          Gra dla 3–10 osób • Działa na telefonie
+          Gra dla 2–10 osób • Działa na telefonie
         </p>
       </div>
     </main>
