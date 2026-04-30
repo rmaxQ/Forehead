@@ -15,7 +15,7 @@ import NotesPanel from "./NotesPanel";
 import MyQuestionsPanel from "./MyQuestionsPanel";
 import { useTurnNotification } from "@/lib/useTurnNotification";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
-import HangmanPhaseOverlay from "./HangmanPhaseOverlay";
+import HangmanPhaseOverlay, { HangmanWordDisplay } from "./HangmanPhaseOverlay";
 
 interface Props {
   room: Doc<"rooms">;
@@ -211,6 +211,15 @@ export default function PlayingPhase({ room, userId }: Props) {
 
         {/* ── Col 3: Chat (40%) ── */}
         <main className="flex-1 lg:flex-none lg:w-[40%] flex flex-col min-w-0 min-h-0 overflow-hidden">
+          {isHangmanMode && me?.assignedCharacter && !me.hasGuessed && !me.hasSurrendered && (
+            <div className="px-4 py-2 bg-cyan-950/60 border-b border-cyan-500/20 shrink-0">
+              <p className="text-xs text-cyan-500/60 uppercase tracking-widest text-center mb-1">Twoja postać</p>
+              <HangmanWordDisplay
+                character={me.assignedCharacter}
+                revealedLetters={me.revealedLetters ?? []}
+              />
+            </div>
+          )}
           {/* {currentPlayer && !currentPlayer.hasGuessed && (
             <div className="px-4 py-2 bg-cyan-900/20 border-b border-cyan-500/20 shrink-0">
               <p className="text-cyan-300 text-sm text-center">

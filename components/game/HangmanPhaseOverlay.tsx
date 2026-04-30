@@ -87,7 +87,7 @@ export default function HangmanPhaseOverlay({ room, userId, players, me }: Props
 
         {!mySubmitted ? (
           <div className="space-y-3">
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2">
               <input
                 type="text"
                 value={letter}

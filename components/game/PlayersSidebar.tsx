@@ -2,7 +2,6 @@
 
 import { Doc, Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
-import { HangmanWordDisplay } from "./HangmanPhaseOverlay";
 
 interface Props {
   players: Doc<"users">[];
@@ -19,7 +18,6 @@ export default function PlayersSidebar({ players, userId, currentTurnUserId, isH
         const isMe = player._id === userId;
         const isSurrendered = player.hasSurrendered === true;
         const character = !isMe ? player.assignedCharacter : undefined;
-        const showHangmanDisplay = isMe && isHangmanMode && !!player.assignedCharacter;
 
         return (
           <div
@@ -64,16 +62,6 @@ export default function PlayersSidebar({ players, userId, currentTurnUserId, isH
               {player.name}
               {isMe && " (ty)"}
             </span>
-
-            {/* Own character in hangman mode — shown as blanks */}
-            {showHangmanDisplay && (
-              <div className="w-full mt-0.5">
-                <HangmanWordDisplay
-                  character={player.assignedCharacter!}
-                  revealedLetters={player.revealedLetters ?? []}
-                />
-              </div>
-            )}
 
             {/* Other players' character — always fully visible */}
             {character && (

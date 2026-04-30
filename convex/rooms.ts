@@ -148,7 +148,7 @@ export const startGame = mutation({
       .withIndex("by_roomId", (q) => q.eq("roomId", args.roomId))
       .collect();
 
-    if (players.length < 3) throw new Error("Potrzeba co najmniej 3 graczy");
+    if (players.length < 2) throw new Error("Potrzeba co najmniej 2 graczy");
 
     const shuffled = [...players].sort(() => Math.random() - 0.5);
     for (let i = 0; i < shuffled.length; i++) {

@@ -108,7 +108,7 @@ export default function LobbyRoom({ room, userId }: Props) {
                 className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${hangmanMode ? "bg-cyan-500" : "bg-white/20"}`}
               >
                 <span
-                  className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${hangmanMode ? "translate-x-6" : "translate-x-1"}`}
+                  className={`absolute left-0 top-1 w-4 h-4 rounded-full bg-white transition-transform ${hangmanMode ? "translate-x-6" : "translate-x-1"}`}
                 />
               </button>
             </div>
