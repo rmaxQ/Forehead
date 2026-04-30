@@ -2,14 +2,16 @@
 
 import { Doc, Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
+import { HangmanWordDisplay } from "./HangmanPhaseOverlay";
 
 interface Props {
   players: Doc<"users">[];
   userId: Id<"users">;
   currentTurnUserId?: Id<"users">;
+  isHangmanMode?: boolean;
 }
 
-export default function PlayersSidebar({ players, userId, currentTurnUserId }: Props) {
+export default function PlayersSidebar({ players, userId, currentTurnUserId, isHangmanMode }: Props) {
   return (
     <div className="flex flex-col gap-1.5 p-2">
       {players.map((player) => {
@@ -17,6 +19,7 @@ export default function PlayersSidebar({ players, userId, currentTurnUserId }: P
         const isMe = player._id === userId;
         const isSurrendered = player.hasSurrendered === true;
         const character = !isMe ? player.assignedCharacter : undefined;
+        const showHangmanDisplay = isMe && isHangmanMode && !!player.assignedCharacter;
 
         return (
           <div
@@ -62,7 +65,17 @@ export default function PlayersSidebar({ players, userId, currentTurnUserId }: P
               {isMe && " (ty)"}
             </span>
 
-            {/* Character name — always visible, wraps if long; title shows full on hover */}
+            {/* Own character in hangman mode — shown as blanks */}
+            {showHangmanDisplay && (
+              <div className="w-full mt-0.5">
+                <HangmanWordDisplay
+                  character={player.assignedCharacter!}
+                  revealedLetters={player.revealedLetters ?? []}
+                />
+              </div>
+            )}
+
+            {/* Other players' character — always fully visible */}
             {character && (
               <span
                 className="text-xs text-cyan-200/60 w-full text-center leading-tight break-words"

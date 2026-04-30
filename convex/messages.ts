@@ -13,6 +13,7 @@ export const submitQuestion = mutation({
 
     const room = await ctx.db.get(args.roomId);
     if (!room || room.status !== "playing") throw new Error("Gra nie trwa");
+    if (room.hangmanPhaseActive) throw new Error("Faza wisielca w toku");
     if (room.currentTurnUserId !== args.userId) throw new Error("Nie Twoja tura");
     if (room.activeMessageId) throw new Error("Trwa głosowanie");
 
@@ -49,6 +50,7 @@ export const submitGuessAttempt = mutation({
 
     const room = await ctx.db.get(args.roomId);
     if (!room || room.status !== "playing") throw new Error("Gra nie trwa");
+    if (room.hangmanPhaseActive) throw new Error("Faza wisielca w toku");
     if (room.currentTurnUserId !== args.userId) throw new Error("Nie Twoja tura");
     if (room.activeMessageId) throw new Error("Trwa głosowanie");
 

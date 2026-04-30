@@ -15,6 +15,7 @@ import NotesPanel from "./NotesPanel";
 import MyQuestionsPanel from "./MyQuestionsPanel";
 import { useTurnNotification } from "@/lib/useTurnNotification";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import HangmanPhaseOverlay from "./HangmanPhaseOverlay";
 
 interface Props {
   room: Doc<"rooms">;
@@ -49,6 +50,8 @@ export default function PlayingPhase({ room, userId }: Props) {
   const currentPlayer = players.find((p) => p._id === room.currentTurnUserId);
   const me = players.find((p) => p._id === userId);
   const isHost = room.hostId === userId;
+  const isHangmanMode = room.hangmanMode ?? false;
+  const isHangmanPhase = isHangmanMode && (room.hangmanPhaseActive ?? false);
   const canSurrender = me && !me.hasGuessed && !me.hasSurrendered;
 
   async function handleSurrender() {
@@ -164,6 +167,7 @@ export default function PlayingPhase({ room, userId }: Props) {
               players={players}
               userId={userId}
               currentTurnUserId={room.currentTurnUserId}
+              isHangmanMode={isHangmanMode}
             />
           </div>
         </aside>
@@ -195,6 +199,7 @@ export default function PlayingPhase({ room, userId }: Props) {
                 players={players}
                 userId={userId}
                 currentTurnUserId={room.currentTurnUserId}
+                isHangmanMode={isHangmanMode}
               />
             </div>
           </div>
@@ -264,6 +269,15 @@ export default function PlayingPhase({ room, userId }: Props) {
           <MyQuestionsPanel messages={messages} userId={userId} />
         </aside>
       </div>
+
+      {isHangmanPhase && (
+        <HangmanPhaseOverlay
+          room={room}
+          userId={userId}
+          players={players}
+          me={me}
+        />
+      )}
 
       <ConfirmDialog
         open={dialog === "surrender"}

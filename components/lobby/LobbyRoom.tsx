@@ -18,6 +18,7 @@ interface Props {
 export default function LobbyRoom({ room, userId }: Props) {
   const router = useRouter();
   const [starting, setStarting] = useState(false);
+  const [hangmanMode, setHangmanMode] = useState(false);
 
   const players = useQuery(api.users.getPlayers, { roomId: room._id });
   const startGame = useMutation(api.rooms.startGame);
@@ -29,7 +30,7 @@ export default function LobbyRoom({ room, userId }: Props) {
   async function handleStart() {
     setStarting(true);
     try {
-      await startGame({ roomId: room._id, hostId: userId });
+      await startGame({ roomId: room._id, hostId: userId, hangmanMode });
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Błąd");
       setStarting(false);
@@ -97,6 +98,20 @@ export default function LobbyRoom({ room, userId }: Props) {
         {/* Actions */}
         {isHost ? (
           <div className="space-y-2">
+            <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/5 border border-white/10">
+              <div>
+                <p className="text-sm text-white/70 font-medium">Tryb Wisielca</p>
+                <p className="text-xs text-white/30">Odkrywaj litery co 3 rundy</p>
+              </div>
+              <button
+                onClick={() => setHangmanMode(!hangmanMode)}
+                className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${hangmanMode ? "bg-cyan-500" : "bg-white/20"}`}
+              >
+                <span
+                  className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${hangmanMode ? "translate-x-6" : "translate-x-1"}`}
+                />
+              </button>
+            </div>
             <Button
               onClick={handleStart}
               className="w-full"

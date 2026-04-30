@@ -10,6 +10,8 @@ export default defineSchema({
     hasGuessed: v.boolean(),
     hasSurrendered: v.optional(v.boolean()),
     order: v.number(),
+    revealedLetters: v.optional(v.array(v.string())),
+    hangmanLetterSubmitted: v.optional(v.boolean()),
   })
     .index("by_roomId", ["roomId"])
     .index("by_roomId_and_order", ["roomId", "order"]),
@@ -26,6 +28,9 @@ export default defineSchema({
     currentTurnUserId: v.optional(v.id("users")),
     activeMessageId: v.optional(v.id("messages")),
     lastActivityAt: v.number(),
+    hangmanMode: v.optional(v.boolean()),
+    hangmanPhaseActive: v.optional(v.boolean()),
+    currentRound: v.optional(v.number()),
   }).index("by_code", ["code"]),
 
   messages: defineTable({

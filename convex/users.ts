@@ -40,9 +40,11 @@ export const assignCharacter = mutation({
 
     if (allAssigned) {
       const sorted = players.sort((a, b) => a.order - b.order);
+      const room = await ctx.db.get(fromUser.roomId);
       await ctx.db.patch(fromUser.roomId, {
         status: "playing",
         currentTurnUserId: sorted[0]._id,
+        currentRound: room?.hangmanMode ? 1 : undefined,
         lastActivityAt: Date.now(),
       });
 

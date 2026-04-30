@@ -111,7 +111,13 @@ export const leaveRoom = mutation({
 
     // Obsługa wyjścia w trakcie gry
     if (room.status === "playing") {
-      if (room.currentTurnUserId === args.userId) {
+      if (room.hangmanPhaseActive) {
+        const active = remaining.filter((p) => !p.hasGuessed && !p.hasSurrendered);
+        const allSubmitted = active.every((p) => p.hangmanLetterSubmitted === true);
+        if (allSubmitted) {
+          await ctx.db.patch(args.roomId, { hangmanPhaseActive: false, lastActivityAt: Date.now() });
+        }
+      } else if (room.currentTurnUserId === args.userId) {
         // Gracz wychodzi podczas swojej tury — wyczyść aktywne głosowanie i przekaż turę
         await ctx.db.patch(args.roomId, { activeMessageId: undefined });
         await ctx.runMutation(internal.rooms.advanceTurn, { roomId: args.roomId });
@@ -130,7 +136,7 @@ export const leaveRoom = mutation({
 });
 
 export const startGame = mutation({
-  args: { roomId: v.id("rooms"), hostId: v.id("users") },
+  args: { roomId: v.id("rooms"), hostId: v.id("users"), hangmanMode: v.optional(v.boolean()) },
   handler: async (ctx, args) => {
     const room = await ctx.db.get(args.roomId);
     if (!room) throw new Error("Pokój nie istnieje");
@@ -151,6 +157,7 @@ export const startGame = mutation({
 
     await ctx.db.patch(args.roomId, {
       status: "assigning",
+      hangmanMode: args.hangmanMode ?? false,
       lastActivityAt: Date.now(),
     });
   },
@@ -179,14 +186,89 @@ export const advanceTurn = internalMutation({
       : -1;
 
     const sortedUnguessed = unguessed.sort((a, b) => a.order - b.order);
-    const nextPlayer =
-      sortedUnguessed.find((p) => p.order > currentOrder) ?? sortedUnguessed[0];
+    const nextInOrder = sortedUnguessed.find((p) => p.order > currentOrder);
+    const isWrapAround = !nextInOrder;
+    const nextPlayer = nextInOrder ?? sortedUnguessed[0];
+
+    if (isWrapAround && room.hangmanMode) {
+      const newRound = (room.currentRound ?? 1) + 1;
+      const triggerHangman = newRound % 3 === 1 && newRound > 1;
+
+      if (triggerHangman) {
+        for (const p of unguessed) {
+          await ctx.db.patch(p._id, { hangmanLetterSubmitted: false });
+        }
+        await ctx.db.patch(args.roomId, {
+          hangmanPhaseActive: true,
+          currentRound: newRound,
+          currentTurnUserId: nextPlayer._id,
+          activeMessageId: undefined,
+          lastActivityAt: Date.now(),
+        });
+        return;
+      }
+
+      await ctx.db.patch(args.roomId, {
+        currentTurnUserId: nextPlayer._id,
+        currentRound: newRound,
+        activeMessageId: undefined,
+        lastActivityAt: Date.now(),
+      });
+      return;
+    }
 
     await ctx.db.patch(args.roomId, {
       currentTurnUserId: nextPlayer._id,
       activeMessageId: undefined,
       lastActivityAt: Date.now(),
     });
+  },
+});
+
+export const submitHangmanLetter = mutation({
+  args: { userId: v.id("users"), roomId: v.id("rooms"), letter: v.string() },
+  handler: async (ctx, args) => {
+    const letter = args.letter.trim().toUpperCase().slice(0, 1);
+    if (!letter || !/^[A-Z]$/.test(letter)) throw new Error("Nieprawidłowa litera");
+
+    const room = await ctx.db.get(args.roomId);
+    if (!room || !room.hangmanPhaseActive) throw new Error("Faza wisielca nie jest aktywna");
+
+    const user = await ctx.db.get(args.userId);
+    if (!user || user.roomId !== args.roomId) throw new Error("Gracz nie istnieje");
+    if (user.hasGuessed || user.hasSurrendered) throw new Error("Nie możesz brać udziału");
+    if (user.hangmanLetterSubmitted) throw new Error("Już wysłałeś/aś literę w tej fazie");
+
+    const character = user.assignedCharacter ?? "";
+    const letterIsPresent = character.toUpperCase().includes(letter);
+    const currentRevealed = user.revealedLetters ?? [];
+    const newRevealed =
+      letterIsPresent && !currentRevealed.includes(letter)
+        ? [...currentRevealed, letter]
+        : currentRevealed;
+
+    await ctx.db.patch(args.userId, {
+      hangmanLetterSubmitted: true,
+      revealedLetters: newRevealed,
+    });
+
+    const allPlayers = await ctx.db
+      .query("users")
+      .withIndex("by_roomId", (q) => q.eq("roomId", args.roomId))
+      .collect();
+    const activePlayers = allPlayers.filter((p) => !p.hasGuessed && !p.hasSurrendered);
+    const allSubmitted = activePlayers.every(
+      (p) => p._id === args.userId ? true : p.hangmanLetterSubmitted === true
+    );
+
+    if (allSubmitted) {
+      await ctx.db.patch(args.roomId, {
+        hangmanPhaseActive: false,
+        lastActivityAt: Date.now(),
+      });
+    } else {
+      await ctx.db.patch(args.roomId, { lastActivityAt: Date.now() });
+    }
   },
 });
 
@@ -282,6 +364,8 @@ export const performResetToLobby = internalMutation({
         hasGuessed: false,
         hasSurrendered: false,
         order: i,
+        revealedLetters: undefined,
+        hangmanLetterSubmitted: undefined,
       });
     }
 
@@ -289,6 +373,9 @@ export const performResetToLobby = internalMutation({
       status: "lobby",
       currentTurnUserId: undefined,
       activeMessageId: undefined,
+      hangmanMode: undefined,
+      hangmanPhaseActive: undefined,
+      currentRound: undefined,
       lastActivityAt: Date.now(),
     });
   },
@@ -339,6 +426,19 @@ export const surrenderPlayer = mutation({
       type: "system",
       timestamp: Date.now(),
     });
+
+    if (room.hangmanPhaseActive) {
+      const allPlayers = await ctx.db
+        .query("users")
+        .withIndex("by_roomId", (q) => q.eq("roomId", args.roomId))
+        .collect();
+      const active = allPlayers.filter((p) => !p.hasGuessed && !p.hasSurrendered);
+      const allSubmitted = active.every((p) => p.hangmanLetterSubmitted === true);
+      if (allSubmitted) {
+        await ctx.db.patch(args.roomId, { hangmanPhaseActive: false, lastActivityAt: Date.now() });
+      }
+      return;
+    }
 
     if (room.currentTurnUserId === args.userId) {
       if (room.activeMessageId) {
