@@ -8,6 +8,7 @@ export default defineSchema({
     isHost: v.boolean(),
     assignedCharacter: v.optional(v.string()),
     hasGuessed: v.boolean(),
+    hasSurrendered: v.optional(v.boolean()),
     order: v.number(),
   })
     .index("by_roomId", ["roomId"])

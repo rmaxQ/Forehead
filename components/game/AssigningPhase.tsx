@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
+import { useRouter } from "next/navigation";
 import { api } from "@/convex/_generated/api";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 interface Props {
   room: Doc<"rooms">;
@@ -16,16 +18,23 @@ interface Props {
 }
 
 export default function AssigningPhase({ room, userId }: Props) {
+  const router = useRouter();
   const [character, setCharacter] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [dialog, setDialog] = useState<"leave" | "reset" | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const players = useQuery(api.users.getPlayers, { roomId: room._id });
   const assignCharacter = useMutation(api.users.assignCharacter);
+  const leaveRoom = useMutation(api.rooms.leaveRoom);
+  const forceResetToLobby = useMutation(api.rooms.forceResetToLobby);
 
   if (!players) return null;
 
   const me = players.find((p) => p._id === userId);
   if (!me) return null;
+
+  const isHost = room.hostId === userId;
 
   const assignedCount = players.filter((p) => p.assignedCharacter !== undefined).length;
   const progress = (assignedCount / players.length) * 100;
@@ -50,6 +59,28 @@ export default function AssigningPhase({ room, userId }: Props) {
       setSubmitted(true);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Błąd");
+    }
+  }
+
+  async function handleLeave() {
+    setActionLoading(true);
+    try {
+      await leaveRoom({ userId, roomId: room._id });
+      router.push("/");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Błąd");
+      setActionLoading(false);
+    }
+  }
+
+  async function handleForceReset() {
+    setActionLoading(true);
+    try {
+      await forceResetToLobby({ roomId: room._id, userId });
+      setDialog(null);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Błąd");
+      setActionLoading(false);
     }
   }
 
@@ -143,7 +174,46 @@ export default function AssigningPhase({ room, userId }: Props) {
             </div>
           ))}
         </div>
+
+        {/* Akcje wyjścia */}
+        <div className="flex gap-2 pt-1">
+          <Button
+            variant="ghost"
+            className="flex-1 text-white/40 text-sm"
+            onClick={() => setDialog("leave")}
+          >
+            🚪 Wyjdź z gry
+          </Button>
+          {isHost && (
+            <Button
+              variant="outline"
+              className="flex-1 text-sm border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+              onClick={() => setDialog("reset")}
+            >
+              🔄 Resetuj do lobby
+            </Button>
+          )}
+        </div>
       </div>
+
+      <ConfirmDialog
+        open={dialog === "leave"}
+        title="Wyjść z gry?"
+        description="Opuścisz grę w trakcie przypisywania postaci. Pozostali gracze wrócą do lobby."
+        confirmLabel="Wyjdź"
+        onConfirm={handleLeave}
+        onCancel={() => setDialog(null)}
+        loading={actionLoading}
+      />
+      <ConfirmDialog
+        open={dialog === "reset"}
+        title="Zresetować grę?"
+        description="Wszyscy gracze wrócą do lobby. Postęp przypisywania zostanie utracony."
+        confirmLabel="Resetuj"
+        onConfirm={handleForceReset}
+        onCancel={() => setDialog(null)}
+        loading={actionLoading}
+      />
     </main>
   );
 }

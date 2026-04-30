@@ -108,6 +108,24 @@ export const leaveRoom = mutation({
       await ctx.db.patch(args.roomId, { hostId: newHost._id });
       await ctx.db.patch(newHost._id, { isHost: true });
     }
+
+    // Obsługa wyjścia w trakcie gry
+    if (room.status === "playing") {
+      if (room.currentTurnUserId === args.userId) {
+        // Gracz wychodzi podczas swojej tury — wyczyść aktywne głosowanie i przekaż turę
+        await ctx.db.patch(args.roomId, { activeMessageId: undefined });
+        await ctx.runMutation(internal.rooms.advanceTurn, { roomId: args.roomId });
+      } else {
+        // Sprawdź czy gra powinna się skończyć (≤1 aktywnych graczy)
+        const active = remaining.filter((p) => !p.hasGuessed && !p.hasSurrendered);
+        if (active.length <= 1) {
+          await ctx.db.patch(args.roomId, { status: "finished", lastActivityAt: Date.now() });
+        }
+      }
+    } else if (room.status === "assigning") {
+      // Łańcuch przypisywania jest zepsuty — resetuj do lobby
+      await ctx.runMutation(internal.rooms.performResetToLobby, { roomId: args.roomId });
+    }
   },
 });
 
@@ -149,7 +167,7 @@ export const advanceTurn = internalMutation({
       .withIndex("by_roomId_and_order", (q) => q.eq("roomId", args.roomId))
       .collect();
 
-    const unguessed = players.filter((p) => !p.hasGuessed);
+    const unguessed = players.filter((p) => !p.hasGuessed && !p.hasSurrendered);
 
     if (unguessed.length <= 1) {
       await ctx.db.patch(args.roomId, { status: "finished", lastActivityAt: Date.now() });
@@ -236,13 +254,10 @@ export const cleanupFinishedRoom = mutation({
   },
 });
 
-export const resetToLobby = mutation({
+// Wspólna logika resetu — używana przez resetToLobby, forceResetToLobby i leaveRoom (podczas assigning)
+export const performResetToLobby = internalMutation({
   args: { roomId: v.id("rooms") },
   handler: async (ctx, args) => {
-    const room = await ctx.db.get(args.roomId);
-    if (!room || room.status !== "finished") return;
-
-    // Delete all messages and their votes
     const messages = await ctx.db
       .query("messages")
       .withIndex("by_roomId", (q) => q.eq("roomId", args.roomId))
@@ -256,7 +271,6 @@ export const resetToLobby = mutation({
       await ctx.db.delete(msg._id);
     }
 
-    // Reset players and re-shuffle order
     const players = await ctx.db
       .query("users")
       .withIndex("by_roomId", (q) => q.eq("roomId", args.roomId))
@@ -266,6 +280,7 @@ export const resetToLobby = mutation({
       await ctx.db.patch(shuffled[i]._id, {
         assignedCharacter: undefined,
         hasGuessed: false,
+        hasSurrendered: false,
         order: i,
       });
     }
@@ -276,6 +291,70 @@ export const resetToLobby = mutation({
       activeMessageId: undefined,
       lastActivityAt: Date.now(),
     });
+  },
+});
+
+export const resetToLobby = mutation({
+  args: { roomId: v.id("rooms") },
+  handler: async (ctx, args) => {
+    const room = await ctx.db.get(args.roomId);
+    if (!room || room.status !== "finished") return;
+    await ctx.runMutation(internal.rooms.performResetToLobby, { roomId: args.roomId });
+  },
+});
+
+// Host-only reset — działa z faz "assigning" i "playing"
+export const forceResetToLobby = mutation({
+  args: { roomId: v.id("rooms"), userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const room = await ctx.db.get(args.roomId);
+    if (!room) throw new Error("Pokój nie istnieje");
+    if (room.hostId !== args.userId) throw new Error("Tylko host może zresetować grę");
+    if (room.status !== "assigning" && room.status !== "playing") {
+      throw new Error("Można resetować tylko podczas gry");
+    }
+    await ctx.runMutation(internal.rooms.performResetToLobby, { roomId: args.roomId });
+  },
+});
+
+// Gracz poddaje się — zostaje w wynikach jako ❌, jego tury są pomijane
+export const surrenderPlayer = mutation({
+  args: { userId: v.id("users"), roomId: v.id("rooms") },
+  handler: async (ctx, args) => {
+    const room = await ctx.db.get(args.roomId);
+    if (!room || room.status !== "playing") throw new Error("Gra nie trwa");
+
+    const user = await ctx.db.get(args.userId);
+    if (!user || user.roomId !== args.roomId) throw new Error("Gracz nie istnieje w tym pokoju");
+    if (user.hasGuessed) throw new Error("Już zgadłeś — nie możesz się poddać");
+    if (user.hasSurrendered) throw new Error("Już się poddałeś");
+
+    await ctx.db.patch(args.userId, { hasSurrendered: true });
+
+    await ctx.db.insert("messages", {
+      roomId: args.roomId,
+      authorId: args.userId,
+      authorName: "System",
+      content: `🏳️ ${user.name} poddał/a się.`,
+      type: "system",
+      timestamp: Date.now(),
+    });
+
+    if (room.currentTurnUserId === args.userId) {
+      if (room.activeMessageId) {
+        await ctx.db.patch(args.roomId, { activeMessageId: undefined });
+      }
+      await ctx.runMutation(internal.rooms.advanceTurn, { roomId: args.roomId });
+    } else {
+      const players = await ctx.db
+        .query("users")
+        .withIndex("by_roomId", (q) => q.eq("roomId", args.roomId))
+        .collect();
+      const active = players.filter((p) => !p.hasGuessed && !p.hasSurrendered);
+      if (active.length <= 1) {
+        await ctx.db.patch(args.roomId, { status: "finished", lastActivityAt: Date.now() });
+      }
+    }
   },
 });
 

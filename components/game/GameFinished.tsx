@@ -121,7 +121,7 @@ export default function GameFinished({ room, userId }: Props) {
                   </div>
                   {!player.hasGuessed && (
                     <span className="text-red-400 text-xs font-medium shrink-0">
-                      Nie zgadł
+                      {player.hasSurrendered ? "Poddał/a się" : "Nie zgadł"}
                     </span>
                   )}
                 </div>

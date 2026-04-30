@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
+import { useRouter } from "next/navigation";
 import { api } from "@/convex/_generated/api";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import ChatHistory from "./ChatHistory";
 import TurnActions from "./TurnActions";
 import VotingPanel from "./VotingPanel";
@@ -12,6 +14,7 @@ import PlayersSidebar from "./PlayersSidebar";
 import NotesPanel from "./NotesPanel";
 import MyQuestionsPanel from "./MyQuestionsPanel";
 import { useTurnNotification } from "@/lib/useTurnNotification";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 interface Props {
   room: Doc<"rooms">;
@@ -19,10 +22,17 @@ interface Props {
 }
 
 export default function PlayingPhase({ room, userId }: Props) {
+  const router = useRouter();
   const players = useQuery(api.users.getPlayers, { roomId: room._id });
   const messages = useQuery(api.messages.getMessages, { roomId: room._id });
   const [leftOpen, setLeftOpen] = useState(false);
   const [rightOpen, setRightOpen] = useState(false);
+  const [dialog, setDialog] = useState<"surrender" | "leave" | "reset" | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const leaveRoom = useMutation(api.rooms.leaveRoom);
+  const surrenderPlayer = useMutation(api.rooms.surrenderPlayer);
+  const forceResetToLobby = useMutation(api.rooms.forceResetToLobby);
 
   const isMyTurn = room.currentTurnUserId === userId;
   const { enabled: notificationsEnabled, loaded: notifLoaded, toggleNotifications } =
@@ -38,6 +48,44 @@ export default function PlayingPhase({ room, userId }: Props) {
 
   const currentPlayer = players.find((p) => p._id === room.currentTurnUserId);
   const me = players.find((p) => p._id === userId);
+  const isHost = room.hostId === userId;
+  const canSurrender = me && !me.hasGuessed && !me.hasSurrendered;
+
+  async function handleSurrender() {
+    setActionLoading(true);
+    try {
+      await surrenderPlayer({ userId, roomId: room._id });
+      setDialog(null);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Błąd");
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function handleLeave() {
+    setActionLoading(true);
+    try {
+      await leaveRoom({ userId, roomId: room._id });
+      router.push("/");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Błąd");
+      setActionLoading(false);
+    }
+  }
+
+  async function handleForceReset() {
+    setActionLoading(true);
+    try {
+      await forceResetToLobby({ roomId: room._id, userId });
+      setDialog(null);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Błąd");
+      setActionLoading(false);
+    } finally {
+      setActionLoading(false);
+    }
+  }
 
   return (
     <div className="h-screen flex flex-col">
@@ -61,6 +109,31 @@ export default function PlayingPhase({ room, userId }: Props) {
               className="text-white/40 hover:text-white/70 text-sm px-2 py-1 rounded-lg border border-white/10 transition-colors"
             >
               {notificationsEnabled ? "🔔" : "🔕"}
+            </button>
+          )}
+          {canSurrender && (
+            <button
+              onClick={() => setDialog("surrender")}
+              title="Poddaj się"
+              className="text-white/40 hover:text-white/70 text-sm px-2 py-1 rounded-lg border border-white/10 transition-colors"
+            >
+              🏳️
+            </button>
+          )}
+          <button
+            onClick={() => setDialog("leave")}
+            title="Wyjdź z gry"
+            className="text-white/40 hover:text-white/70 text-sm px-2 py-1 rounded-lg border border-white/10 transition-colors"
+          >
+            🚪
+          </button>
+          {isHost && (
+            <button
+              onClick={() => setDialog("reset")}
+              title="Resetuj do lobby"
+              className="text-white/40 hover:text-amber-400/70 text-sm px-2 py-1 rounded-lg border border-white/10 transition-colors"
+            >
+              🔄
             </button>
           )}
           <button
@@ -154,7 +227,7 @@ export default function PlayingPhase({ room, userId }: Props) {
             {room.activeMessageId && (
               <VotingPanel room={room} userId={userId} players={players} />
             )}
-            {isMyTurn && !me?.hasGuessed && (
+            {isMyTurn && !me?.hasGuessed && !me?.hasSurrendered && (
               <TurnActions
                 roomId={room._id}
                 userId={userId}
@@ -191,6 +264,34 @@ export default function PlayingPhase({ room, userId }: Props) {
           <MyQuestionsPanel messages={messages} userId={userId} />
         </aside>
       </div>
+
+      <ConfirmDialog
+        open={dialog === "surrender"}
+        title="Poddać się?"
+        description="Zostaniesz oznaczony jako ❌ w wynikach. Twoje tury będą pomijane, ale możesz dalej obserwować grę."
+        confirmLabel="Poddaj się"
+        onConfirm={handleSurrender}
+        onCancel={() => setDialog(null)}
+        loading={actionLoading}
+      />
+      <ConfirmDialog
+        open={dialog === "leave"}
+        title="Wyjść z gry?"
+        description="Opuścisz pokój. Jeśli to Twoja tura, przejdzie do następnego gracza."
+        confirmLabel="Wyjdź"
+        onConfirm={handleLeave}
+        onCancel={() => setDialog(null)}
+        loading={actionLoading}
+      />
+      <ConfirmDialog
+        open={dialog === "reset"}
+        title="Zresetować grę do lobby?"
+        description="Wszyscy gracze wrócą do lobby. Cały postęp gry zostanie utracony."
+        confirmLabel="Resetuj"
+        onConfirm={handleForceReset}
+        onCancel={() => setDialog(null)}
+        loading={actionLoading}
+      />
     </div>
   );
 }

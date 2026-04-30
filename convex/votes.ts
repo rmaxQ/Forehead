@@ -37,8 +37,10 @@ export const submitVote = mutation({
       .withIndex("by_roomId", (q) => q.eq("roomId", args.roomId))
       .collect();
 
-    // Wszyscy gracze poza aktywnym mogą głosować (w tym ci, którzy już zgadli)
-    const voters = allPlayers.filter((p) => p._id !== room.currentTurnUserId);
+    // Wszyscy gracze poza aktywnym mogą głosować (w tym ci, którzy już zgadli), z wyjątkiem poddanych
+    const voters = allPlayers.filter(
+      (p) => p._id !== room.currentTurnUserId && !p.hasSurrendered
+    );
     const totalVoters = voters.length;
 
     const allVotes = await ctx.db
