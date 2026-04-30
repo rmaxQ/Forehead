@@ -11,6 +11,7 @@ import VotingPanel from "./VotingPanel";
 import PlayersSidebar from "./PlayersSidebar";
 import NotesPanel from "./NotesPanel";
 import MyQuestionsPanel from "./MyQuestionsPanel";
+import { useTurnNotification } from "@/lib/useTurnNotification";
 
 interface Props {
   room: Doc<"rooms">;
@@ -23,6 +24,10 @@ export default function PlayingPhase({ room, userId }: Props) {
   const [leftOpen, setLeftOpen] = useState(false);
   const [rightOpen, setRightOpen] = useState(false);
 
+  const isMyTurn = room.currentTurnUserId === userId;
+  const { enabled: notificationsEnabled, loaded: notifLoaded, toggleNotifications } =
+    useTurnNotification(isMyTurn);
+
   if (!players || !messages) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -31,7 +36,6 @@ export default function PlayingPhase({ room, userId }: Props) {
     );
   }
 
-  const isMyTurn = room.currentTurnUserId === userId;
   const currentPlayer = players.find((p) => p._id === room.currentTurnUserId);
   const me = players.find((p) => p._id === userId);
 
@@ -50,6 +54,15 @@ export default function PlayingPhase({ room, userId }: Props) {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-white/40 text-sm font-mono tracking-widest">{room.code}</span>
+          {notifLoaded && (
+            <button
+              onClick={toggleNotifications}
+              title={notificationsEnabled ? "Wyłącz powiadomienia o turze" : "Włącz powiadomienia o turze"}
+              className="text-white/40 hover:text-white/70 text-sm px-2 py-1 rounded-lg border border-white/10 transition-colors"
+            >
+              {notificationsEnabled ? "🔔" : "🔕"}
+            </button>
+          )}
           <button
             onClick={() => { setRightOpen(!rightOpen); setLeftOpen(false); }}
             className="lg:hidden text-white/40 hover:text-white/70 text-sm px-2 py-1 rounded-lg border border-white/10 transition-colors"
